@@ -1,14 +1,15 @@
 from datetime import datetime
 
+
 def transform_datetime(dt):
-    """ converts datetime parameter"""                               
+    """ converts datetime parameter"""
 
     if dt is None:
         dt = ''
     else:
         assert isinstance(dt, datetime)
         dt = dt.strftime('%Y-%m-%d %H:%M:%S')
- 
+
     return dt
 
 
@@ -17,7 +18,7 @@ def flatten(params, key=None):
     flat = {}
     for name, val in params.items():
         if key is not None and not isinstance(key, int):
-            name = "%s[%s]" % (key, name)
+            name = "{}[{}]".format(key, name)
         if isinstance(val, dict):
             flat.update(flatten(val, name))
         elif isinstance(val, list):
@@ -25,4 +26,3 @@ def flatten(params, key=None):
         elif val is not None:
             flat[name] = val
     return flat
-

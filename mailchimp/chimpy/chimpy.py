@@ -1,7 +1,14 @@
 import json
 import pprint
-import urllib
-import urllib2
+import six
+try:
+    from urllib import quote_plus, urlencode
+except ImportError:
+    from urllib.parse import quote_plus, urlencode
+try:
+    from urllib2 import build_opener
+except ImportError:
+    from urllib.request import build_opener
 from warnings import warn
 
 from .utils import transform_datetime
@@ -36,26 +43,26 @@ class Connection(object):
             dc = 'us1'
         api_host = dc + '.' + api_host
 
-        self.url = '%s://%s/%s/' % (proto, api_host, self.version)
-        self.opener = urllib2.build_opener()
+        self.url = '{}://{}/{}/'.format(proto, api_host, self.version)
+        self.opener = build_opener()
         self.opener.addheaders = [('Content-Type', 'application/x-www-form-urlencoded')]
 
     def _rpc(self, method, **params):
         """make an rpc call to the server"""
 
-        params = urllib.urlencode(params, doseq=True)
+        params = urlencode(params, doseq=True)
 
         if _debug > 1:
-            print __name__, "making request with parameters"
+            print(__name__, "making request with parameters")
             pprint.pprint(params)
-            print __name__, "encoded parameters:", params
+            print(__name__, "encoded parameters:", params)
 
         response = self.opener.open("%s?method=%s" % (self.url, method), params)
         data = response.read()
         response.close()
 
         if _debug > 1:
-            print __name__, "rpc call received", data
+            print(__name__, "rpc call received", data)
 
         result = json.loads(data)
 
@@ -72,7 +79,7 @@ class Connection(object):
 
         try:
             if errors:
-                raise ChimpyException("%s:\n%s" % (errors[0], params))
+                raise ChimpyException("{}:\n{}".format(errors[0], params))
         except TypeError:
             # thrown when results is not iterable (eg bool)
             pass
@@ -84,7 +91,7 @@ class Connection(object):
 
 
         # flatten dict variables
-        params = dict([(str(k), v.encode('utf-8') if isinstance(v, unicode) else v) for k,v in flatten(params).items()])
+        params = dict([(str(k), v.encode('utf-8') if isinstance(v, six.text_types) else v) for k,v in flatten(params).items()])
         params['output'] = self.output
         params['apikey'] = self._apikey
 
@@ -178,7 +185,7 @@ class Connection(object):
                               replace_interests=replace_interests)
 
     def list_member_info(self, id, email_address):
-        if isinstance(email_address, basestring):
+        if isinstance(email_address, six.string_types):
             first = True
             email_address = [email_address]
         else:
@@ -272,16 +279,16 @@ class Connection(object):
         """
         # enforce the 100 char limit (urlencoded!!!)
         title = options.get('title', options['subject'])
-        if isinstance(title, unicode):
+        if isinstance(title, six.text_types):
             title = title.encode('utf-8')
-        titlelen = len(urllib.quote_plus(title))
+        titlelen = len(quote_plus(title))
         if titlelen > 99:
             title = title[:-(titlelen - 96)] + '...'
             warn("cropped campaign title to fit the 100 character limit, new title: '%s'" % title, ChimpyWarning)
         subject = options['subject']
-        if isinstance(subject, unicode):
+        if isinstance(subject, six.text_types):
             subject = subject.encode('utf-8')
-        subjlen = len(urllib.quote_plus(subject))
+        subjlen = len(quote_plus(subject))
         if subjlen > 99:
             subject = subject[:-(subjlen - 96)] + '...'
             warn("cropped campaign subject to fit the 100 character limit, new subject: '%s'" % subject, ChimpyWarning)
@@ -342,7 +349,7 @@ class Connection(object):
         http://apidocs.mailchimp.com/api/1.3/campaignsendtest.func.php
         """
 
-        if isinstance(test_emails, basestring):
+        if isinstance(test_emails, six.string_types):
             test_emails = [test_emails]
 
         return self._api_call(method='campaignSendTest', cid=cid, test_emails=test_emails, **kwargs)
