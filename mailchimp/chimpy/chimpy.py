@@ -282,18 +282,18 @@ class Connection(object):
         # enforce the 100 char limit (urlencoded!!!)
         title = settings.get('title', settings['subject_line'])
 
-        if isinstance(title, unicode):
-            title = title.encode('utf-8')
-        titlelen = len(urllib.quote_plus(title))
+        #if isinstance(title, str):
+        #    title = title.encode('utf-8')
+        titlelen = len(quote_plus(title))
 
         if titlelen > 99:
             title = title[:-(titlelen - 96)] + '...'
             warn("cropped campaign title to fit the 100 character limit, new title: '%s'" % title, ChimpyWarning)
         subject = settings['subject_line']
 
-        if isinstance(subject, unicode):
-            subject = subject.encode('utf-8')
-        subjlen = len(urllib.quote_plus(subject))
+        #if isinstance(subject, str):
+        #    subject = subject.encode('utf-8')
+        subjlen = len(quote_plus(subject))
 
         if subjlen > 99:
             subject = subject[:-(subjlen - 96)] + '...'
@@ -313,10 +313,14 @@ class Connection(object):
 
     def campaign_set_content(self, cid, template):
         path = 'campaigns/{}/content'.format(cid)
-        payload = {
-            'template': {'id': template.id, 'sections': template.as_dict()}
-        }
-        return self.make_request('PUT', path, body=payload)
+        try:
+            payload = {
+                'template': {'id': template.id, 'sections': template.as_dict()}
+            }
+        except AttributeError:
+            pass  # skipping content creation is OK
+        else:
+            return self.make_request('PUT', path, body=payload)
 
     def campaign_content(self, cid):
         """Get the content (both html and text) for a campaign
