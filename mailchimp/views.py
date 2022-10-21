@@ -2,7 +2,7 @@ import datetime
 import re
 
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Campaign, Queue
@@ -19,11 +19,20 @@ class MailchimpBaseView(BaseView):
 
 
 class MailchimpView(MailchimpBaseView):
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+
     required_permissions = ['mailchimp.can_view']
 
 
 class Overview(MailchimpView):
     template = 'mailchimp/overview.html'
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
 
     def handle_post(self):
         return self.not_allowed()
@@ -40,6 +49,11 @@ class Overview(MailchimpView):
 
 
 class ScheduleCampaignForObject(MailchimpView):
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+
 
     def auth_check(self):
         basic = super(ScheduleCampaignForObject, self).auth_check()
@@ -65,6 +79,11 @@ class ScheduleCampaignForObject(MailchimpView):
 
 class TestCampaignForObjectReal(ScheduleCampaignForObject):
 
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+
+
     def handle_get(self):
         ct = ContentType.objects.get(pk=self.kwargs['content_type'])
         obj = ct.model_class().objects.get(pk=self.kwargs['pk'])
@@ -79,6 +98,11 @@ class TestCampaignForObjectReal(ScheduleCampaignForObject):
 
 
 class TestCampaignForObject(ScheduleCampaignForObject):
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+
     template = 'mailchimp/send_test.html'
 
     def handle_get(self):
@@ -91,6 +115,11 @@ class TestCampaignForObject(ScheduleCampaignForObject):
 
 
 class CampaignInformation(MailchimpView):
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+
     template = 'mailchimp/campaign_information.html'
 
     def handle_post(self):
@@ -107,6 +136,11 @@ class CampaignInformation(MailchimpView):
 
 
 class WebHook(MailchimpBaseView):
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+
 
     def handle_get(self):
         return self.response("hello chimp")
@@ -164,6 +198,11 @@ class WebHook(MailchimpBaseView):
 
 class Dequeue(ScheduleCampaignForObject):
 
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
+    
+
     def handle_get(self):
         q = Queue.objects.get_or_404(pk=self.kwargs['id'])
         if q.send():
@@ -174,6 +213,10 @@ class Dequeue(ScheduleCampaignForObject):
 
 
 class Cancel(ScheduleCampaignForObject):
+
+    def __init__(self):
+        super().__init__()
+        self.__qualname__ = self.__class__.__name__
 
     def handle_get(self):
         q = Queue.objects.get_or_404(pk=self.kwargs['id'])
